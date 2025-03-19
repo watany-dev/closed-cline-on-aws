@@ -22,15 +22,26 @@ test('SageMaker Studio Domain Created', () => {
   template.resourceCountIs('AWS::SageMaker::Domain', 1);
 });
 
-test('VPC Endpoints Created', () => {
+test('S3 Gateway Endpoint Created', () => {
   const app = new cdk.App();
   // WHEN
   const stack = new SagemakerVpcStack(app, 'MyTestStack');
   // THEN
   const template = Template.fromStack(stack);
 
-  // Check for VPC endpoints
-  template.resourceCountIs('AWS::EC2::VPCEndpoint', 5); // 4 interface endpoints + 1 gateway endpoint
+  // Check for S3 gateway endpoint
+  template.resourceCountIs('AWS::EC2::VPCEndpoint', 1);
+});
+
+test('NAT Gateway Created', () => {
+  const app = new cdk.App();
+  // WHEN
+  const stack = new SagemakerVpcStack(app, 'MyTestStack');
+  // THEN
+  const template = Template.fromStack(stack);
+
+  // Check for NAT Gateway
+  template.resourceCountIs('AWS::EC2::NatGateway', 1);
 });
 
 test('Security Group Created', () => {
@@ -40,7 +51,8 @@ test('Security Group Created', () => {
   // THEN
   const template = Template.fromStack(stack);
 
-  template.resourceCountIs('AWS::EC2::SecurityGroup', 5);
+  // Security group for SageMaker Studio
+  template.resourceCountIs('AWS::EC2::SecurityGroup', 1);
 });
 
 test('IAM Role Created', () => {

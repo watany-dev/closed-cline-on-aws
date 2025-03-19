@@ -16,7 +16,7 @@ As a professional, you will complete using AWS CDK and related technologies.
     - All snapshot tests must pass.
     - No errors should occur during `cdk synth`.
     - Perform static analysis using Checkov on the `cdk synth` result and pass all checks.
-        - Example command: `checkov -f cdk.out/AppStack.template.json`
+        - Example command: `npm run lint`
         - If certain issues are difficult to resolve, discuss and mark them as ignored.
     - Update ADRs if there are implementation differences.
 

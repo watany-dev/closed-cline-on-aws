@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as core from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sagemaker from 'aws-cdk-lib/aws-sagemaker';
@@ -8,30 +9,22 @@ export class SagemakerVpcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create a VPC with private subnets only
+    // Create VPC with private and public subnets
     const vpc = new ec2.Vpc(this, 'SagemakerVpc', {
-      maxAzs: 3,
+      maxAzs: 2,
       subnetConfiguration: [
         {
           cidrMask: 24,
+          name: 'Public',
+          subnetType: ec2.SubnetType.PUBLIC,
+        },
+        {
+          cidrMask: 24,
           name: 'Private',
-          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
         },
       ],
-      natGateways: 0, // No NAT gateways as we don't want internet access
-    });
-
-    // Create VPC endpoints for SageMaker and other required AWS services
-    vpc.addInterfaceEndpoint('SageMakerApi', {
-      service: ec2.InterfaceVpcEndpointAwsService.SAGEMAKER_API,
-    });
-
-    vpc.addInterfaceEndpoint('SageMakerRuntime', {
-      service: ec2.InterfaceVpcEndpointAwsService.SAGEMAKER_RUNTIME,
-    });
-
-    vpc.addInterfaceEndpoint('SageMakerNotebook', {
-      service: ec2.InterfaceVpcEndpointAwsService.SAGEMAKER_NOTEBOOK,
+      natGateways: 1,
     });
 
     // Add S3 gateway endpoint
@@ -39,16 +32,11 @@ export class SagemakerVpcStack extends cdk.Stack {
       service: ec2.GatewayVpcEndpointAwsService.S3,
     });
 
-    // Add CloudWatch Logs endpoint
-    vpc.addInterfaceEndpoint('CloudWatchLogs', {
-      service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-    });
-
-    // Create security group for SageMaker Studio
+    // Create security group for SageMaker Studio with NAT access
     const sagemakerSG = new ec2.SecurityGroup(this, 'SagemakerSecurityGroup', {
       vpc,
       description: 'Security group for SageMaker Studio',
-      allowAllOutbound: false, // Restrict outbound traffic
+      allowAllOutbound: false, // Restrict outbound traffic via NAT
     });
 
     // Allow HTTPS traffic within the security group
@@ -56,6 +44,13 @@ export class SagemakerVpcStack extends cdk.Stack {
       sagemakerSG,
       ec2.Port.tcp(443),
       'Allow HTTPS traffic within the security group'
+    );
+
+    // Allow outbound traffic to internet via NAT
+    sagemakerSG.addEgressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(443),
+      'Allow HTTPS outbound traffic'
     );
 
     // Create IAM role for SageMaker Studio
@@ -75,7 +70,7 @@ export class SagemakerVpcStack extends cdk.Stack {
       },
       domainName: 'sagemaker-studio-domain',
       subnetIds: vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
       }).subnetIds,
       vpcId: vpc.vpcId,
       appNetworkAccessType: 'VpcOnly', // Restrict to VPC only
@@ -105,5 +100,7 @@ export class SagemakerVpcStack extends cdk.Stack {
       value: vpc.vpcId,
       description: 'VPC ID',
     });
+
+    core.RemovalPolicies.of(this).destroy()
   }
 }

@@ -1,7 +1,7 @@
 # System Patterns and Architecture
 
 ## Architectural Overview
-Infrastructure management system built on AWS CDK, emphasizing modularity, scalability, and maintainability through infrastructure as code (IaC) principles.
+Infrastructure management system built on AWS CDK, emphasizing modularity, scalability, and maintainability through infrastructure as code (IaC) principles. The system now incorporates controlled internet access via NAT Gateway for SageMaker Studio environments.
 
 ## Core Architectural Patterns
 - Infrastructure as Code (IaC)
@@ -24,12 +24,21 @@ Infrastructure management system built on AWS CDK, emphasizing modularity, scala
 - Centralized Resource Management
 - Cross-Stack References and Dependencies
 
+## Network Architecture Patterns
+- Hybrid Network Isolation (Private subnets with controlled egress)
+- NAT Gateway for Outbound Internet Access
+- Gateway VPC Endpoints for AWS Services
+- Security Group Traffic Control
+- Network Traffic Monitoring and Logging
+
 ## Security and Compliance Patterns
 - Least Privilege Access
 - Automated Security Scanning
 - Compliance as Code
 - Continuous Security Validation
 - Secrets Management
+- Controlled Outbound Internet Access
+- Egress Traffic Filtering and Monitoring
 
 ## Deployment and Lifecycle Management
 - Continuous Integration/Continuous Deployment (CI/CD)
@@ -44,6 +53,8 @@ Infrastructure management system built on AWS CDK, emphasizing modularity, scala
 - Performance Monitoring
 - Elastic Resource Allocation
 - Cost-Efficient Infrastructure Design
+- NAT Gateway Capacity Planning
+- VPC Endpoint vs NAT Gateway Performance Trade-offs
 
 ## Error Handling and Resilience
 - Graceful Degradation

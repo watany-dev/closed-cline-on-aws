@@ -8,7 +8,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "lint": "checkov -f cdk.out/*.template.json"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

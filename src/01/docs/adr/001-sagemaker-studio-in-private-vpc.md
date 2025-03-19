@@ -1,28 +1,23 @@
-# SageMaker Studio in Private VPC
+# SageMaker Studio in Private VPC with NAT Gateway
 
 **Date:** 2025-03-19
 
 ## Status
 
-Accepted
+Accepted (Updated: 2025-03-19)
 
 ## Context
 
-We need to create a secure environment for data scientists to work with sensitive data using SageMaker Studio. The environment must not have direct internet access to prevent data exfiltration and reduce the attack surface. However, users still need to be able to access the SageMaker Studio environment.
+We need to create a secure environment for data scientists to work with sensitive data using SageMaker Studio. Initially, the environment was designed without direct internet access to prevent data exfiltration and reduce the attack surface. However, after further evaluation, it was determined that controlled internet access via NAT Gateway is necessary for certain workflows while maintaining security controls.
 
 ## Decision
 
 We have decided to implement the following architecture:
 
-1. Create a VPC with private subnets only (no public subnets)
-2. Do not configure NAT Gateways to ensure no internet access
-3. Set up VPC endpoints for the following AWS services:
-   - SageMaker API
-   - SageMaker Runtime
-   - SageMaker Notebook
-   - S3
-   - CloudWatch Logs
-4. Configure a security group that restricts outbound traffic and only allows HTTPS traffic within the security group
+1. Create a VPC with both public and private subnets
+2. Configure a NAT Gateway to allow controlled outbound internet access
+3. Set up VPC endpoint for S3 (Gateway endpoint)
+4. Configure a security group that allows outbound HTTPS traffic via NAT Gateway
 5. Create an IAM role with the necessary permissions for SageMaker Studio
 6. Configure SageMaker Studio Domain with `appNetworkAccessType: 'VpcOnly'` to restrict network access to the VPC
 
@@ -30,28 +25,27 @@ We have decided to implement the following architecture:
 
 ### Positive
 
-- Enhanced security posture by eliminating direct internet access
-- Reduced attack surface for potential threats
-- Compliance with strict security requirements
-- Data scientists can still access SageMaker Studio and perform their work
-- AWS services can be accessed securely through VPC endpoints
+- Controlled outbound internet access allows data scientists to download packages and access external resources
+- Reduced operational complexity by eliminating the need for multiple interface VPC endpoints
+- Improved developer experience with access to public repositories and resources
+- Maintained security with controlled egress through NAT Gateway
+- AWS S3 service can still be accessed securely through Gateway endpoint for cost optimization
 
 ### Negative
 
-- Users cannot download packages or data from the internet directly
-- Additional operational complexity in managing VPC endpoints
-- Potential limitations in accessing external resources
-- May require additional processes for importing data and models
+- Slightly increased attack surface compared to completely isolated environment
+- Additional cost for NAT Gateway
+- Need for additional security monitoring of outbound traffic
 
 ## Alternatives Considered
 
-### Public Subnets with NAT Gateway
+### Completely Isolated Environment
 
-We considered using a VPC with public subnets and NAT Gateways to allow outbound internet access while still restricting inbound traffic. This would provide more flexibility for users to download packages and access external resources. However, this approach was rejected because it would not meet the strict security requirements of preventing data exfiltration.
+Our initial approach was to use a VPC with private subnets only and no NAT Gateways to ensure no internet access. While this provided maximum security against data exfiltration, it created significant operational challenges for data scientists who needed to access external resources and packages. After evaluation, we determined that the security benefits did not outweigh the operational constraints.
 
 ### Using AWS PrivateLink for All Services
 
-We considered using AWS PrivateLink for all required AWS services. While this would provide a more consistent approach to accessing AWS services, it would increase costs and complexity. We opted for a mix of interface endpoints and gateway endpoints (for S3) to optimize for cost and performance.
+We considered using AWS PrivateLink (Interface VPC Endpoints) for all required AWS services. While this would provide a more consistent approach to accessing AWS services without internet access, it would increase costs and complexity. With the decision to implement NAT Gateway, we determined that most Interface VPC Endpoints were no longer necessary, except for S3 Gateway Endpoint which we retained for cost optimization.
 
 ## References
 
