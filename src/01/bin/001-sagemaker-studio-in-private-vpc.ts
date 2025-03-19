@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { SagemakerVpcStack } from '../lib/sagemaker-vpc-stack';
+import { SagemakerVpcStack } from '../lib/001-sagemaker-studio-in-private-vpc-stack';
 
 const app = new cdk.App();
 new SagemakerVpcStack(app, 'SagemakerVpcStack', {

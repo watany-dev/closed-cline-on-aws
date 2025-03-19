@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/sagemaker-app.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/001-sagemaker-studio-in-private-vpc",
   "watch": {
     "include": [
       "**"

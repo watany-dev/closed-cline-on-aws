@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { SagemakerVpcStack } from '../lib/sagemaker-vpc-stack';
+import { SagemakerVpcStack } from '../lib/001-sagemaker-studio-in-private-vpc-stack';
 
 test('VPC Created', () => {
   const app = new cdk.App();
